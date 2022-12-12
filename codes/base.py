@@ -8,6 +8,7 @@ from matplotlib.pyplot import plot, savefig, figure
 from utils import count_trainable_variables
 tfd = tfp.distributions
 
+tf.compat.v1.disable_eager_execution()
 
 class BaseDataGenerator:
   def __init__(self, config):
@@ -52,22 +53,23 @@ class BaseModel:
 
   # initialize a tensorflow variable to use it as epoch counter
   def init_cur_epoch(self):
-    with tf.variable_scope('cur_epoch'):
+    with tf.compat.v1.variable_scope('cur_epoch'):
       self.cur_epoch_tensor = tf.Variable(0, trainable=False, name='cur_epoch')
-      self.increment_cur_epoch_tensor = tf.assign(self.cur_epoch_tensor, self.cur_epoch_tensor + 1)
+      self.increment_cur_epoch_tensor = tf.compat.v1.assign(self.cur_epoch_tensor, self.cur_epoch_tensor + 1)
 
   # just initialize a tensorflow variable to use it as global step counter
   def init_global_step(self):
     # DON'T forget to add the global step tensor to the tensorflow trainer
-    with tf.variable_scope('global_step'):
+    with tf.compat.v1.variable_scope('global_step'):
       self.global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
-      self.increment_global_step_tensor = tf.assign(
+      self.increment_global_step_tensor = tf.compat.v1.assign(
         self.global_step_tensor, self.global_step_tensor + 1)
 
   def define_loss(self):
     with tf.name_scope("loss"):
       # KL divergence loss - analytical result
       KL_loss = 0.5 * (tf.reduce_sum(tf.square(self.code_mean), 1)
+                       
                        + tf.reduce_sum(tf.square(self.code_std_dev), 1)
                        - tf.reduce_sum(tf.log(tf.square(self.code_std_dev)), 1)
                        - self.config['code_size'])
@@ -106,7 +108,7 @@ class BaseModel:
     print("Total number of trainable parameters in the VAE network is: {}".format(self.num_vars_total))
 
   def compute_gradients(self):
-    self.lr = tf.placeholder(tf.float32, [])
+    self.lr = tf.compat.v1.placeholder(tf.float32, [])
     opt = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=0.9, beta2=0.95)
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     gvs_dataset = opt.compute_gradients(self.elbo_loss, var_list=self.train_vars_VAE)

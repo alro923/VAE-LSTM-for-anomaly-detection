@@ -8,6 +8,8 @@ import tensorflow_probability as tfp
 
 tfd = tfp.distributions
 
+tf.compat.v1.disable_eager_execution()
+
 
 class VAEmodel(BaseModel):
   def __init__(self, config):
@@ -22,16 +24,16 @@ class VAEmodel(BaseModel):
     self.init_saver()
 
   def define_iterator(self):
-    self.original_signal = tf.placeholder(tf.float32, [None, self.config['l_win'], self.config['n_channel']])
-    self.seed = tf.placeholder(tf.int64, shape=())
+    self.original_signal = tf.compat.v1.placeholder(tf.float32, [None, self.config['l_win'], self.config['n_channel']])
+    self.seed = tf.compat.v1.placeholder(tf.int64, shape=())
     self.dataset = tf.data.Dataset.from_tensor_slices(self.original_signal)
     self.dataset = self.dataset.shuffle(buffer_size=60000, seed=self.seed)
     self.dataset = self.dataset.repeat(8000)
     self.dataset = self.dataset.batch(self.config['batch_size'], drop_remainder=True)
     self.iterator = self.dataset.make_initializable_iterator()
     self.input_image = self.iterator.get_next()
-    self.code_input = tf.placeholder(tf.float32, [None, self.config['code_size']])
-    self.is_code_input = tf.placeholder(tf.bool)
+    self.code_input = tf.compat.v1.placeholder(tf.float32, [None, self.config['code_size']])
+    self.is_code_input = tf.compat.v1.placeholder(tf.bool)
     self.sigma2_offset = tf.constant(self.config['sigma2_offset'])
 
   def build_model(self):
